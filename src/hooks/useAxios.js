@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import axios from "../config/axios";
 
 export const useAxios = (url) => {
-    const [info, setInfo] = useState([]);
+    const [data, setData] = useState([]);
 
     useEffect(() => {
         axios.get(url).then((res) => {
-            setInfo(res.info);
+            setData(res.data);
         });
     }, []);
 
-    return {info};
+    return {data};
 }

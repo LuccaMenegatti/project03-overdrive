@@ -1,15 +1,13 @@
-//import { Table } from './Tabela/Table'
+import ProductsDemo from "./components/Table/DataTable";
+
 
 const Company = () => {
-  return (
-    <div>
-      
-      <p>Company</p> 
+    return (
+        <section>
+            <h2></h2>
+            <ProductsDemo />
+        </section>
+    );
+};
 
-      
-
-    </div>
-  )
-}
-
-export default Company
+export default Company;
