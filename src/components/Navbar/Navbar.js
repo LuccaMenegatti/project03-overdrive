@@ -9,14 +9,11 @@ import {Cabecalho, LogoOverdrive} from'./Style';
 const Navbar = () => {
   return (
     <Cabecalho >
-        
-        <Link to="/">
-            <LogoOverdrive class="logo" src={Logo} alt="Logo Overdrive" />
-        </Link>
 
-        <Link to="/people">People</Link>
+          <Link to="/people">People</Link>
 
-        <Link to="/company">Companies</Link>
+          <Link to="/company">Companies</Link>
+
     </Cabecalho>
   );
 };

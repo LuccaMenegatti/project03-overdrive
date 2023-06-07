@@ -1,11 +1,15 @@
-import ProductsDemo from "./components/Table/DataTable";
+import TableLayout from "./components/Table/DataTable";
+import { CompanyContextProvider } from "./context/CompanyContext";
+import { useAxios } from "../../hooks/useAxios";
 
 
 const Company = () => {
+    const { data } = useAxios("Company");
     return (
         <section>
-            <h2></h2>
-            <ProductsDemo />
+            <CompanyContextProvider>
+                <TableLayout />
+            </CompanyContextProvider>
         </section>
     );
 };

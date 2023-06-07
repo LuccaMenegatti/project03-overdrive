@@ -2,7 +2,7 @@ import { styled } from "../../config/stitches";
 
 export const Cabecalho = styled ("nav", { 
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
     padding: "1rem 2rem",
     backgroundColor:"#222326",
@@ -10,6 +10,7 @@ export const Cabecalho = styled ("nav", {
    "& a" : {
     display: "flex",
     alignItems: "right",
+    marginRight: "20px",
     gap: "0.5rem",
     textDecoration: "none",
     color: "#fff",

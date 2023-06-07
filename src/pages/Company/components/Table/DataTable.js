@@ -5,20 +5,35 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
-import { FileUpload } from 'primereact/fileupload';
 import { Rating } from 'primereact/rating';
+import { FileUpload } from 'primereact/fileupload';
 import { Toolbar } from 'primereact/toolbar';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { RadioButton } from 'primereact/radiobutton';
 import { InputNumber } from 'primereact/inputnumber';
 import { Dialog } from 'primereact/dialog';
+import { TabView, TabPanel } from 'primereact/tabview';
+import { Panel } from 'primereact/panel';
 import { InputText } from 'primereact/inputtext';
 import { Tag } from 'primereact/tag';
 import "primeicons/primeicons.css";
 import { useAxios } from '../../../../hooks/useAxios';
-import { Container } from "./style";
+import CreateCompanyDialog from '../CreateCompany';
+import { useContext } from "react";
+import { CompanyContext } from "../../context/CompanyContext";
+import TextData from "../../../../components/TextData";
+import { Avatar } from "primereact/avatar";
 
-export default function ProductsDemo() {
+import {
+    Container, 
+    ViewData,
+    Address,
+    Person,
+    PersonData,
+    PersonContainer,
+  } from "./style";
+
+export default function TableLayout() {
     let emptyCompany = {
         id: null,
         cnpj: "",
@@ -39,11 +54,26 @@ export default function ProductsDemo() {
         },
     };
 
-    const {data} = useAxios("Company/SearchCompany");
+    const {
+        data, 
+        peopleList,
+        companyCnpj, 
+        companyAddress,
+        GetCompany, 
+        DeleteCompany, 
+        SearchPeopleInCompany, 
+        SearchCnpj
+    } = useAxios();
+
+    const {companyDialog, setCompanyDialog} = useContext(CompanyContext);
+
     const [company, setCompany] = useState(emptyCompany);
     const [companies, setCompanies] = useState(data);
-    const [companyDialog, setCompanyDialog] = useState(false);
+    const [peopleInCompany, setPeopleInCompany] = useState(peopleList);
+    const [companyPorCnpj, setCompanyPorCnpj] = useState(companyCnpj);
+    const [companyPorCnpjAddress, setCompanyPorCnpjAddress] = useState(companyAddress);
     const [deleteCompanyDialog, setDeleteCompanyDialog] = useState(false);
+    const [searchPeopleInCompanyDialog, setSearchPeopleInCompanyDialog] = useState(false);
     const [deleteCompaniesDialog, setDeleteCompaniesDialog] = useState(false);
     const [selectedCompanies, setSelectedCompanies] = useState(null);
     const [submitted, setSubmitted] = useState(false);
@@ -51,9 +81,9 @@ export default function ProductsDemo() {
     const toast = useRef(null);
     const dt = useRef(null);
 
-    // useEffect(() => {
-    //     ProductService.getProducts().then((data) => setProducts(data));
-    // }, []);
+    useEffect(() => {
+        GetCompany("Company/SearchCompany");
+    }, [data]);
 
     const openNew = () => {
         setCompany(emptyCompany);
@@ -69,6 +99,10 @@ export default function ProductsDemo() {
     const hideDeleteCompanyDialog = () => {
         setDeleteCompanyDialog(false);
     };
+
+    const hideSearchPeopleInCompany = () => {
+        setSearchPeopleInCompanyDialog(false);
+    }
 
     const saveCompany = () => {
         setSubmitted(true);
@@ -105,13 +139,34 @@ export default function ProductsDemo() {
         setDeleteCompanyDialog(true);
     };
 
-    const deleteCompany = () => {
-        let _companies = companies.filter((val) => val.id !== company.id);
+    const searchPeople = (company) => {
+        setCompany(company);
 
-        setCompanies(_companies);
-        setDeleteCompanyDialog(false);
-        setCompany(emptyCompany);
-        toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
+        SearchPeopleInCompany("Company/SearchPeopleInCompany", company.id);
+        SearchCnpj("Company/SearchCompanyByCnpj", company.cnpj)
+        setPeopleInCompany(peopleList);
+        setCompanyPorCnpj(companyCnpj);
+        setCompanyPorCnpjAddress(companyAddress);
+
+        
+        setSearchPeopleInCompanyDialog(true);
+       
+    };
+
+    const deleteCompany = () => {
+            DeleteCompany("Company/DeleteCompany", company.id);
+            GetCompany("Company/SearchCompany");       
+            setCompanies(data);
+        
+            setDeleteCompanyDialog(false);
+            setCompany(emptyCompany);
+        
+            toast.current.show({
+              severity: "success",
+              summary: "Successful",
+              detail: "Product Deleted",
+              life: 3000,
+            });
     };
 
     const findIndexById = (id) => {
@@ -168,11 +223,11 @@ export default function ProductsDemo() {
             <Container>
 
                 <Button
-                    icon="pi pi-ellipsis-h"
+                    icon="pi pi-users"
                     rounded
                     outlined
                     severity="warning"
-                    // onClick={() => expandCompanyInfo(rowData)}
+                    onClick={() => searchPeople(rowData)}
                 />
 
                 <Button 
@@ -194,21 +249,55 @@ export default function ProductsDemo() {
 
     //Mascaras
     const maskCnpj = (cnpj) => {
-        return cnpj.replace(
-          /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-          "$1.$2.$3/$4-$5"
-        );
+        if (cnpj) {
+            return cnpj.replace(
+            /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+            "$1.$2.$3/$4-$5"
+            );
+        }
     };
 
+    const maskCpf = (cpf) => {
+        if (cpf) {
+            return cpf.replace(
+            /^(\d{3})(\d{3})(\d{3})(\d{2})/,
+            "$1.$2.$3/$4"
+            );
+        }
+    };
+    
+
     const maskCnae = (cnae) => {
-        return cnae.replace(
-          /^(\d{4})(\d{1})(\d{2})/,
-          "$1-$2/$3"
-        );
+        if(cnae){
+            return cnae.replace(
+            /^(\d{4})(\d{1})(\d{2})/,
+            "$1-$2/$3"
+            );
+        }
+    };
+
+    const maskCep = (cep) => {
+        if(cep) {
+            return cep.replace(
+            /^(\d{5})(\d{3})/,
+            "$1-$2"
+            );
+        }
+    };
+
+    const maskContact = (contact) => {
+        if(contact){
+            return contact.replace(
+            /^(\d{2})(\d{5})(\d{4})/,
+            "($1)$2-$3"
+            );
+        }
     };
 
     const maskDate = (date) => {
-        return date.split("T")[0].split("-").reverse().join("/");
+        if(date){
+            return date.split("T")[0].split("-").reverse().join("/");
+        }
     };
 
     const maskStatus = (company) => {
@@ -228,7 +317,9 @@ export default function ProductsDemo() {
     };
 
     const maskFinance = (value) => {
-        return value.toLocaleString('pt-RS', { style: 'currency', currency: 'BRL' });
+        if(value){
+            return value.toLocaleString('pt-RS', { style: 'currency', currency: 'BRL' });
+        }
     };
 
     //Templates
@@ -258,11 +349,15 @@ export default function ProductsDemo() {
          <Container>
              <span className="p-input-icon-left">
                  <i className="pi pi-search" />
-                 <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Search..." />
+                 <InputText 
+                    type="search" 
+                    onInput={(e) => setGlobalFilter(e.target.value)} 
+                    placeholder="Pesquisar..." 
+                 />
              </span>
 
             <Button
-                label="New"
+                label="Criar Empresa"
                 icon="pi pi-plus"
                 severity="success"
                 onClick={openNew}
@@ -273,15 +368,15 @@ export default function ProductsDemo() {
 
     const companyDialogFooter = (
         <React.Fragment>
-            <Button label="Cancel" icon="pi pi-times" outlined onClick={hideDialog} />
-            <Button label="Save" icon="pi pi-check" onClick={saveCompany} />
+            <Button label="Cancelar" icon="pi pi-times" outlined onClick={hideDialog} />
+            <Button label="Cadastrar" icon="pi pi-check" onClick={saveCompany} />
         </React.Fragment>
     );
 
     const deleteCompanyDialogFooter = (
         <React.Fragment>
-            <Button label="No" icon="pi pi-times" outlined onClick={hideDeleteCompanyDialog} />
-            <Button label="Yes" icon="pi pi-check" severity="danger" onClick={deleteCompany} />
+            <Button label="Não" icon="pi pi-times" outlined onClick={hideDeleteCompanyDialog} />
+            <Button label="Sim" icon="pi pi-check" severity="danger" onClick={deleteCompany} />
         </React.Fragment>
     );
 
@@ -290,24 +385,21 @@ export default function ProductsDemo() {
             <Toast ref={toast} />
             <div className="card">
 
-                <DataTable ref={dt} 
+                <DataTable 
+                    ref={dt} 
                     value={data} 
-                    selection={selectedCompanies} 
-                    onSelectionChange={(e) => setSelectedCompanies(e.value)}
                     dataKey="id"  
                     paginator rows={10} 
+                    header={header}
                     rowsPerPageOptions={[5, 10, 25]}
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" 
-                    globalFilter={globalFilter}
-                    header={header}>
+                    globalFilter={globalFilter}>
 
-                    {/* <Column selectionMode="multiple" exportable={false}></Column> */}
-                    <Column field="id" header="Id" sortable style={{ minWidth: '8rem' }}></Column>
+                    <Column field="id" header="Id" sortable style={{ minWidth: '5rem' }}></Column>
                     <Column field="companyName" header="Nome" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="cnpj" header="Cnpj" body={cnpjBodyTemplate} sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="cnae" header="Cnae" body={cnaeBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
-                    {/* <Column field="image" header="Image" body={imageBodyTemplate}></Column> */}
                     <Column field="finance" header="Finanças" body={priceBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="startDate" header="Fundação" body={dateBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="status" header="Status" body={statusBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
@@ -315,69 +407,135 @@ export default function ProductsDemo() {
                 </DataTable>
             </div>
 
-            <Dialog visible={companyDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Company Details" modal className="p-fluid" footer={companyDialogFooter} onHide={hideDialog}>
-                {company.image && <img src={`https://primefaces.org/cdn/primereact/images/product/${company.image}`} alt={company.image} className="product-image block m-auto pb-3" />}
-                <div className="field">
-                    <label htmlFor="name" className="font-bold">
-                        Name
-                    </label>
-                    <InputText id="name" value={company.companyName} onChange={(e) => onInputChange(e, 'name')} required autoFocus className={classNames({ 'p-invalid': submitted && !company.companyName })} />
-                    {submitted && !company.companyName && <small className="p-error">Name is required.</small>}
-                </div>
-                {/* <div className="field">
-                    <label htmlFor="description" className="font-bold">
-                        Description
-                    </label>
-                    <InputTextarea id="description" value={product.description} onChange={(e) => onInputChange(e, 'description')} required rows={3} cols={20} />
-                </div> */}
+            <CreateCompanyDialog visible={companyDialog} />
 
-                {/* <div className="field">
-                    <label className="mb-3 font-bold">Category</label>
-                    <div className="formgrid grid">
-                        <div className="field-radiobutton col-6">
-                            <RadioButton inputId="category1" name="category" value="Accessories" onChange={onCategoryChange} checked={product.category === 'Accessories'} />
-                            <label htmlFor="category1">Accessories</label>
-                        </div>
-                        <div className="field-radiobutton col-6">
-                            <RadioButton inputId="category2" name="category" value="Clothing" onChange={onCategoryChange} checked={product.category === 'Clothing'} />
-                            <label htmlFor="category2">Clothing</label>
-                        </div>
-                        <div className="field-radiobutton col-6">
-                            <RadioButton inputId="category3" name="category" value="Electronics" onChange={onCategoryChange} checked={product.category === 'Electronics'} />
-                            <label htmlFor="category3">Electronics</label>
-                        </div>
-                        <div className="field-radiobutton col-6">
-                            <RadioButton inputId="category4" name="category" value="Fitness" onChange={onCategoryChange} checked={product.category === 'Fitness'} />
-                            <label htmlFor="category4">Fitness</label>
-                        </div>
-                    </div>
-                </div> */}
+            <Dialog 
+                visible={deleteCompanyDialog} 
+                style={{ width: '32rem' }} 
+                breakpoints={{ '960px': '75vw', '641px': '90vw' }} 
+                header="Confirmação de exclusão" 
+                modal 
+                footer={deleteCompanyDialogFooter} 
+                onHide={hideDeleteCompanyDialog}>
 
-                {/* <div className="formgrid grid">
-                    <div className="field col">
-                        <label htmlFor="price" className="font-bold">
-                            Price
-                        </label>
-                        <InputNumber id="price" value={product.price} onValueChange={(e) => onInputNumberChange(e, 'price')} mode="currency" currency="USD" locale="en-US" />
-                    </div>
-                    <div className="field col">
-                        <label htmlFor="quantity" className="font-bold">
-                            Quantity
-                        </label>
-                        <InputNumber id="quantity" value={product.quantity} onValueChange={(e) => onInputNumberChange(e, 'quantity')} />
-                    </div>
-                </div> */}
-            </Dialog>
-
-            <Dialog visible={deleteCompanyDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Confirm" modal footer={deleteCompanyDialogFooter} onHide={hideDeleteCompanyDialog}>
                 <div className="confirmation-content">
-                    <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
                     {company && (
                         <span>
-                            Are you sure you want to delete <b>{company.companyName}</b>?
+                            Tem certeza? Essa ação não da pra ser desfeita
                         </span>
                     )}
                 </div>
+            </Dialog>
+
+            <Dialog 
+                visible={searchPeopleInCompanyDialog} 
+                onHide={hideSearchPeopleInCompany}
+                style={{ width: '32rem' }} 
+                breakpoints={{ '960px': '75vw', '641px': '100vw' }}>
+
+                    <TabView>
+                        <TabPanel header="Empresa">
+                        <ViewData>
+                            <TextData
+                                data={companyCnpj.companyName}
+                                name="Nome da empresa"
+                                className="companyName"
+                            />
+                            <TextData
+                                data={companyCnpj.fantasyName}
+                                name="Nome Fantasia"
+                                className="fantasyName"
+                            />
+                            <TextData
+                                data={companyCnpj.status}
+                                name="Status"
+                                className="status"
+                            />
+
+                            <TextData
+                                data={maskCnpj(companyCnpj.cnpj)}
+                                name="CNPJ"
+                                className="cnpj"
+                            />
+
+                            <TextData 
+                                data={maskCnae(companyCnpj.cnae)} 
+                                name="CNAE" 
+                                className="cnae"
+                            />
+
+                            <TextData
+                                data={companyCnpj.legalNature}
+                                name="Natureza Legal"
+                                className="legalNature"
+                            />
+
+                            <TextData
+                                data={maskDate(companyCnpj.startDate)}
+                                name="Data de Abertura"
+                                className="startDate"
+                            />
+                            <TextData
+                                data={maskFinance(companyCnpj.finance)}
+                                name="Capital Financeiro"
+                                className="finance"
+                            />
+                            </ViewData>
+                        </TabPanel>
+
+                        <TabPanel header="Endereço">
+                            <Address>
+                                <TextData data={maskCep(companyAddress.cep)} 
+                                    name="Cep" 
+                                    className="cep" 
+                                />
+                                <TextData
+                                    data={companyAddress.street}
+                                    name="Rua"
+                                    className="street"
+                                />
+                                <TextData
+                                    data={companyAddress.number}
+                                    name="Numero"
+                                    className="number"
+                                />
+                                <TextData
+                                    data={companyAddress.district}
+                                    name="Bairro"
+                                    className="district"
+                                />
+
+                                <TextData
+                                    data={companyAddress.city}
+                                    name="Cidade"
+                                    className="city"
+                                />
+
+                                <TextData
+                                    data={maskContact(companyAddress.contact)}
+                                    name="Contato"
+                                    className="contact"
+                                />
+                            </Address> 
+                        </TabPanel>
+
+                        <TabPanel header="Funcionarios">
+                            <PersonContainer>
+                                {peopleList.map((people) => 
+                                    <Person>
+                                    <Avatar icon="pi pi-user" shape="circle" />
+                                    <div>
+                                        <PersonData>
+                                        <li>{people.name}</li>
+                                        <li>Cpf: {maskCpf(people.cpf)}</li>
+                                        </PersonData>
+                                    </div>
+                                    </Person>
+                                )}
+                            </PersonContainer>
+                        </TabPanel>
+                    
+                    </TabView>          
             </Dialog>
 
             {/* <Dialog visible={deleteProductsDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Confirm" modal footer={deleteProductsDialogFooter} onHide={hideDeleteProductsDialog}>
@@ -389,4 +547,4 @@ export default function ProductsDemo() {
         </div>
     );
 }
-        
+         
