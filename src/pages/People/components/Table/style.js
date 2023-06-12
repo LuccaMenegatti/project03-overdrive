@@ -10,6 +10,42 @@ export const ViewData = styled("div", {
   display: "grid",
   gridTemplateColumns: "1fr 1fr 1fr 1fr",
 
+  "& .name": {
+    gridColumnStart: "1",
+    gridColumnEnd: "5",
+  },
+
+  "& .userName": {
+    gridColumnStart: "1",
+    gridColumnEnd: "4",
+  },
+
+  "& .id": {
+    gridColumnStart: "1",
+    gridColumnEnd: "2",
+  },
+
+  "& .cpf": {
+    gridColumnStart: "1",
+    gridColumnEnd: "3",
+  },
+
+  "& .status": {
+    // Estilos para a classe .status
+  },
+
+  "& .numberContact": {
+    gridColumnStart: "3",
+    gridColumnEnd: "5",
+  },
+});
+
+export const CompanyView = styled("div", {
+  gridColumnStart: "1",
+  gridColumnEnd: "5",
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr 1fr 1fr",
+
   "& .companyName": {
     gridColumnStart: "1",
     gridColumnEnd: "5",
@@ -18,6 +54,10 @@ export const ViewData = styled("div", {
   "& .fantasyName": {
     gridColumnStart: "1",
     gridColumnEnd: "4",
+  },
+
+  "& .status": {
+    // Estilos para a classe .status
   },
 
   "& .id": {
@@ -30,11 +70,17 @@ export const ViewData = styled("div", {
     gridColumnEnd: "3",
   },
 
-  "& .status": {
-    // Estilos para a classe .status
+  "& .cnae": {
+    gridColumnStart: "3",
+    gridColumnEnd: "5",
   },
 
-  "& .cnae": {
+  "& .startDate": {
+    gridColumnStart: "1",
+    gridColumnEnd: "3",
+  },
+
+  "& .finance": {
     gridColumnStart: "3",
     gridColumnEnd: "5",
   },
@@ -42,53 +88,6 @@ export const ViewData = styled("div", {
   "& .legalNature": {
     gridColumnStart: "1",
     gridColumnEnd: "3",
-  },
-
-  "& .startDate": {
-    gridColumnStart: "3",
-    gridColumnEnd: "5",
-  },
-
-  "& .finance": {
-    gridColumnStart: "1",
-    gridColumnEnd: "5",
-  },
-});
-
-export const AddressView = styled("div", {
-  gridColumnStart: "1",
-  gridColumnEnd: "5",
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr 1fr 1fr",
-
-  "& .cep": {
-    gridColumnStart: "1",
-    gridColumnEnd: "5",
-  },
-
-  "& .street": {
-    gridColumnStart: "1",
-    gridColumnEnd: "4",
-  },
-
-  "& .number": {
-    gridColumnStart: "4",
-    gridColumnEnd: "5",
-  },
-
-  "& .district": {
-    gridColumnStart: "1",
-    gridColumnEnd: "3",
-  },
-
-  "& .city": {
-    gridColumnStart: "3",
-    gridColumnEnd: "5",
-  },
-
-  "& .contact": {
-    gridColumnStart: "1",
-    gridColumnEnd: "5",
   },
 });
 
@@ -133,82 +132,34 @@ const FormEdit = styled("div", {
     },
 });
 
-export const Company = styled("div", {
+export const People = styled("div", {
   marginTop: "1rem",
   display: "grid",
   gridTemplateColumns: "1fr 1fr 1fr 1fr",
 });
 
-export const CompanyName = styled(FormEdit, {
-  "&.companyName": {
-    gridColumnStart: "1",
-    gridColumnEnd: "5",
-  },
-  "&.fantasyName": {
+export const PeopleName = styled(FormEdit, {
+  "&.name": {
     gridColumnStart: "1",
     gridColumnEnd: "3",
   },
-});
-
-export const StartDate = styled(FormEdit, {
-  gridColumnStart: "3",
-  gridColumnEnd: "5",
-});
-
-export const Cnpj = styled(FormEdit, {
-  gridColumnStart: "1",
-  gridColumnEnd: "3",
-});
-
-export const Cnae = styled(FormEdit, {
-  gridColumnStart: "3",
-  gridColumnEnd: "5",
-});
-
-export const LegalNature = styled(FormEdit, {
-  gridColumnStart: "1",
-  gridColumnEnd: "3",
-});
-
-export const Finance = styled(FormEdit, {
-  gridColumnStart: "3",
-  gridColumnEnd: "5",
-});
-
-export const Address = styled("fieldset", {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr 1fr 1fr",
-  marginTop: "1rem",
-  border: "2px solid rgb(102 102 102 / 18%)",
-  paddingTop: "1rem",
-  "& legend": {
-    fontSize: "20px",
-    marginLeft: "1rem",
+  "&.userName": {
+    gridColumnStart: "3",
+    gridColumnEnd: "5",
   },
 });
 
-export const Cep = styled(FormEdit, {
+export const Cpf = styled(FormEdit, {
   gridColumnStart: "1",
-  gridColumnEnd: "5",
-});
-export const Street = styled(FormEdit, {
-  gridColumnStart: "1",
-  gridColumnEnd: "4",
+  gridColumnEnd: "3",
 });
 
-export const Number = styled(FormEdit, {});
-
-export const District = styled(FormEdit, {
-  gridColumnStart: "1",
+export const NumberContact = styled(FormEdit, {
+  gridColumnStart: "3",
   gridColumnEnd: "5",
 });
 
-export const City = styled(FormEdit, {
+export const Company = styled(FormEdit, {
   gridColumnStart: "1",
   gridColumnEnd: "5",
 });
-
-export const Contact = styled(FormEdit, {
-    gridColumnStart: "1",
-    gridColumnEnd: "5",
-  });

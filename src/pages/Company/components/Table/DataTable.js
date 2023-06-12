@@ -1,37 +1,47 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+
 import { classNames } from 'primereact/utils';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
-import { Rating } from 'primereact/rating';
-import { FileUpload } from 'primereact/fileupload';
-import { Toolbar } from 'primereact/toolbar';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { RadioButton } from 'primereact/radiobutton';
 import { InputNumber } from 'primereact/inputnumber';
 import { Dialog } from 'primereact/dialog';
 import { TabView, TabPanel } from 'primereact/tabview';
-import { Panel } from 'primereact/panel';
+import { Calendar } from "primereact/calendar";
 import { InputText } from 'primereact/inputtext';
+import { InputMask } from "primereact/inputmask";
 import { Tag } from 'primereact/tag';
 import "primeicons/primeicons.css";
+
 import { useAxios } from '../../../../hooks/useAxios';
-import CreateCompanyDialog from '../CreateCompany';
-import { useContext } from "react";
-import { CompanyContext } from "../../context/CompanyContext";
 import TextData from "../../../../components/TextData";
-import { Avatar } from "primereact/avatar";
 
 import {
     Container, 
-    ViewData,
+    District,
+    Cnae,
+    Cep,
+    City,
+    Cnpj,
+    StartDate,
+    Contact,
+    Finance,
+    CompanyName,
+    LegalNature,
     Address,
+    Number,
+    Street,
+    Company,
+    ViewData,
+    AddressView,
     Person,
     PersonData,
     PersonContainer,
   } from "./style";
+
+  import { useAddress } from "../../../../hooks/useAddress";
 
 export default function TableLayout() {
     let emptyCompany = {
@@ -59,41 +69,42 @@ export default function TableLayout() {
         peopleList,
         companyCnpj, 
         companyAddress,
-        GetCompany, 
-        DeleteCompany, 
+        GetAxios, 
+        CreateCompany,
+        PutCompany,
+        DeleteAxios, 
         SearchPeopleInCompany, 
         SearchCnpj
     } = useAxios();
 
-    const {companyDialog, setCompanyDialog} = useContext(CompanyContext);
-
     const [company, setCompany] = useState(emptyCompany);
     const [companies, setCompanies] = useState(data);
+    const { address, getAddress } = useAddress();
+    const [createCompanyDialog, setCreateCompanyDialog] = useState(false);
     const [peopleInCompany, setPeopleInCompany] = useState(peopleList);
     const [companyPorCnpj, setCompanyPorCnpj] = useState(companyCnpj);
     const [companyPorCnpjAddress, setCompanyPorCnpjAddress] = useState(companyAddress);
     const [deleteCompanyDialog, setDeleteCompanyDialog] = useState(false);
     const [searchPeopleInCompanyDialog, setSearchPeopleInCompanyDialog] = useState(false);
-    const [deleteCompaniesDialog, setDeleteCompaniesDialog] = useState(false);
-    const [selectedCompanies, setSelectedCompanies] = useState(null);
+    const [editCompanyDialog, setEditCompanyDialog] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState(null);
     const toast = useRef(null);
     const dt = useRef(null);
 
     useEffect(() => {
-        GetCompany("Company/SearchCompany");
+        GetAxios("Company/SearchCompany");
     }, [data]);
 
     const openNew = () => {
         setCompany(emptyCompany);
         setSubmitted(false);
-        setCompanyDialog(true);
+        setCreateCompanyDialog(true);
     };
 
-    const hideDialog = () => {
+    const hideCreateCompanyDialog = () => {
         setSubmitted(false);
-        setCompanyDialog(false);
+        setCreateCompanyDialog(false);
     };
 
     const hideDeleteCompanyDialog = () => {
@@ -104,34 +115,31 @@ export default function TableLayout() {
         setSearchPeopleInCompanyDialog(false);
     }
 
+    const hideEditCompanyDialog = () => {
+        setEditCompanyDialog(false);
+    } 
+
     const saveCompany = () => {
         setSubmitted(true);
-
-        if (company.companyName.trim()) {
-            let _companies = [...companies];
-            let _company = { ...company };
-
-            if (company.id) {
-                const index = findIndexById(company.id);
-
-                _companies[index] = _company;
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
-            } else {
-                _company.id = createId();
-                _company.image = 'product-placeholder.svg';
-                _companies.push(_company);
-                toast.current.show({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
-            }
-
-            setCompanies(_companies);
-            setCompanyDialog(false);
-            setCompany(emptyCompany);
-        }
+        let _company = company;
+    
+        if (_company.cnpj.length === 14 && _company.cnae.length === 7) {
+            CreateCompany("Company", company);
+            setCreateCompanyDialog(false);
+            toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Empresa Cadastrada', life: 3000 });
+        } 
     };
+    
+    const updateCompany = (company) => {
+        // setSubmitted(true);
+        // let _company = company;
+        // PutCompany("Company/UpdateCompany", company);
+        // setEditCompanyDialog(false);
+      };
 
     const editCompany = (company) => {
         setCompany({ ...company });
-        setCompanyDialog(true);
+        setEditCompanyDialog(true);
     };
 
     const confirmDeleteCompany = (company) => {
@@ -154,8 +162,8 @@ export default function TableLayout() {
     };
 
     const deleteCompany = () => {
-            DeleteCompany("Company/DeleteCompany", company.id);
-            GetCompany("Company/SearchCompany");       
+            DeleteAxios("Company/DeleteCompany", company.id);
+            GetAxios("Company/SearchCompany");       
             setCompanies(data);
         
             setDeleteCompanyDialog(false);
@@ -164,7 +172,7 @@ export default function TableLayout() {
             toast.current.show({
               severity: "success",
               summary: "Successful",
-              detail: "Product Deleted",
+              detail: "Empresa Deletada",
               life: 3000,
             });
     };
@@ -218,12 +226,31 @@ export default function TableLayout() {
         setCompany(_company);
     }; 
 
+    const onInputAddressChange = (e, name) => {
+        const value = e.target.value || "";
+        let _company = { ...company };
+        let _address = { ...company.address };
+    
+        if (name.includes("cep")) {
+          getAddress(value);
+          _address[`street`] = address.logradouro;
+          _address[`district`] = address.bairro;
+          _address[`city`] = address.localidade;
+    
+          _company["address"] = _address;
+          setCompany(_company);
+        }
+        _address[`${name}`] = value;
+        _company["address"] = _address;
+        setCompany(_company);
+    };
+
     const actionBodyTemplate = (rowData) => {
         return (
             <Container>
 
                 <Button
-                    icon="pi pi-users"
+                    icon="pi pi-bars"
                     rounded
                     outlined
                     severity="warning"
@@ -357,7 +384,7 @@ export default function TableLayout() {
              </span>
 
             <Button
-                label="Criar Empresa"
+                label="Cadastrar Empresa"
                 icon="pi pi-plus"
                 severity="success"
                 onClick={openNew}
@@ -366,9 +393,9 @@ export default function TableLayout() {
          
      );
 
-    const companyDialogFooter = (
+    const createCompanyDialogFooter = (
         <React.Fragment>
-            <Button label="Cancelar" icon="pi pi-times" outlined onClick={hideDialog} />
+            <Button label="Cancelar" icon="pi pi-times" outlined onClick={hideCreateCompanyDialog} />
             <Button label="Cadastrar" icon="pi pi-check" onClick={saveCompany} />
         </React.Fragment>
     );
@@ -380,171 +407,565 @@ export default function TableLayout() {
         </React.Fragment>
     );
 
+    const editCompanyDialogFooter = (
+        <React.Fragment>
+            <Button label="Cancelar" icon="pi pi-times" severity="danger" onClick={hideEditCompanyDialog} />
+            <Button label="Salvar" icon="pi pi-check" outlined onClick={updateCompany} />
+        </React.Fragment>
+    );
+
     return (
-        <div>
-            <Toast ref={toast} />
-            <div className="card">
+        <React.Fragment>
+            <div>
+                <Toast ref={toast} />
+                <div className="card">
 
-                <DataTable 
-                    ref={dt} 
-                    value={data} 
-                    dataKey="id"  
-                    paginator rows={10} 
-                    header={header}
-                    rowsPerPageOptions={[5, 10, 25]}
-                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" 
-                    globalFilter={globalFilter}>
+                    <DataTable 
+                        ref={dt} 
+                        value={data} 
+                        dataKey="id"  
+                        paginator rows={10} 
+                        header={header}
+                        rowsPerPageOptions={[5, 10, 25]}
+                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                        currentPageReportTemplate=" {first} a {last} " 
+                        globalFilter={globalFilter}>
 
-                    <Column field="id" header="Id" sortable style={{ minWidth: '5rem' }}></Column>
-                    <Column field="companyName" header="Nome" sortable style={{ minWidth: '10rem' }}></Column>
-                    <Column field="cnpj" header="Cnpj" body={cnpjBodyTemplate} sortable style={{ minWidth: '12rem' }}></Column>
-                    <Column field="cnae" header="Cnae" body={cnaeBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
-                    <Column field="finance" header="Finanças" body={priceBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
-                    <Column field="startDate" header="Fundação" body={dateBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
-                    <Column field="status" header="Status" body={statusBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
-                    <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: '12rem' }}></Column>
-                </DataTable>
-            </div>
+                        <Column field="id" header="Id" sortable style={{ minWidth: '5rem' }}></Column>
+                        <Column field="companyName" header="Nome" sortable style={{ minWidth: '10rem' }}></Column>
+                        <Column field="cnpj" header="Cnpj" body={cnpjBodyTemplate} sortable style={{ minWidth: '12rem' }}></Column>
+                        <Column field="cnae" header="Cnae" body={cnaeBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
+                        <Column field="finance" header="Finanças" body={priceBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
+                        <Column field="startDate" header="Fundação" body={dateBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
+                        <Column field="status" header="Status" body={statusBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
+                        <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: '12rem' }}></Column>
+                    </DataTable>
+                </div>
 
-            <CreateCompanyDialog visible={companyDialog} />
+                {/* create dialog */}
+                <Dialog
+                    visible={createCompanyDialog}
+                    style={{ width: "40rem" }}
+                    breakpoints={{ "960px": "75vw", "641px": "90vw" }}
+                    header="Cadastro de Empresas"
+                    modal
+                    className="p-fluid"
+                    footer={createCompanyDialogFooter}
+                    onHide={hideCreateCompanyDialog}>
 
-            <Dialog 
-                visible={deleteCompanyDialog} 
-                style={{ width: '32rem' }} 
-                breakpoints={{ '960px': '75vw', '641px': '90vw' }} 
-                header="Confirmação de exclusão" 
-                modal 
-                footer={deleteCompanyDialogFooter} 
-                onHide={hideDeleteCompanyDialog}>
-
-                <div className="confirmation-content">
-                    {company && (
-                        <span>
-                            Tem certeza? Essa ação não da pra ser desfeita
+                    <Company>
+                    {/* companyName */}
+                    <CompanyName className="companyName">
+                        <span className="p-float-label">
+                        <InputText
+                            id="companyName"
+                            value={company.companyName}
+                            onChange={(e) => onInputChange(e, "companyName")}
+                            autoFocus
+                        />
+                        <label htmlFor="companyName">Nome da Empresa</label>
                         </span>
-                    )}
-                </div>
-            </Dialog>
+                    </CompanyName>
 
-            <Dialog 
-                visible={searchPeopleInCompanyDialog} 
-                onHide={hideSearchPeopleInCompany}
-                style={{ width: '32rem' }} 
-                breakpoints={{ '960px': '75vw', '641px': '100vw' }}>
+                    {/* fantasyName */}
+                    <CompanyName className="fantasyName">
+                        <span className="p-float-label">
+                        <InputText
+                            id="fantasyName"
+                            value={company.fantasyName}
+                            onChange={(e) => onInputChange(e, "fantasyName")}
+                        />
+                        <label htmlFor="fantasyName">Nome Fantasia</label>
+                        </span>
+                    </CompanyName>
 
-                    <TabView>
-                        <TabPanel header="Empresa">
-                        <ViewData>
-                            <TextData
-                                data={companyCnpj.companyName}
-                                name="Nome da empresa"
-                                className="companyName"
-                            />
-                            <TextData
-                                data={companyCnpj.fantasyName}
-                                name="Nome Fantasia"
-                                className="fantasyName"
-                            />
-                            <TextData
-                                data={companyCnpj.status}
-                                name="Status"
-                                className="status"
-                            />
+                    {/* startDate */}
+                    <StartDate className="startDate">
+                        <span className="p-float-label">
+                        <Calendar
+                            id="startDate"
+                            onChange={(e) => onInputChange(e, "startDate")}
+                            value={company.startDate}
+                            dateFormat="dd/mm/yy"
+                            showIcon
+                        />
+                        <label htmlFor="startDate">Fundação</label>
+                        </span>
+                    </StartDate>
 
-                            <TextData
-                                data={maskCnpj(companyCnpj.cnpj)}
-                                name="CNPJ"
-                                className="cnpj"
-                            />
+                    {/* cnpj */}
+                    <Cnpj>
+                        <span className="p-float-label">
+                        <InputMask
+                            id="cnpj"
+                            mask="99.999.999/9999-99"
+                            unmask={true}
+                            onChange={(e) => onInputChange(e, "cnpj")}
+                            required
+                        />
+                        <label htmlFor="cnpj"> Cnpj </label>
+                        </span>
+                    </Cnpj>
 
-                            <TextData 
-                                data={maskCnae(companyCnpj.cnae)} 
-                                name="CNAE" 
-                                className="cnae"
-                            />
+                    {/* cnae */}
+                    <Cnae className="field">
+                        <span className="p-float-label">
+                        <InputMask
+                            id="cnae"
+                            mask="9999-9/99"
+                            unmask={true}
+                            onChange={(e) => onInputChange(e, "cnae")}
+                            // value={company.cnae}
+                            required
+                            className={classNames({
+                            "p-invalid":
+                                submitted &&
+                                !company.cnae &&
+                                (submitted && company.cnae.length) < 7,
+                            })}
+                        />
+                        <label htmlFor="cnae">Cnae</label>
+                        </span>
+                        {submitted && !company.cnae && (
+                        <small className="p-error">CNAE é obrigatório.</small>
+                        )}
+                        {submitted && company.cnae.length < 7 && (
+                        <small className="p-error">Minimo de 7 caracteres.</small>
+                        )}
+                    </Cnae>
 
-                            <TextData
-                                data={companyCnpj.legalNature}
-                                name="Natureza Legal"
-                                className="legalNature"
-                            />
+                    {/* legalNature */}
+                    <LegalNature className="field">
+                        <span className="p-float-label">
+                        <InputText
+                            id="legalNature"
+                            value={company.legalNature}
+                            onChange={(e) => onInputChange(e, "legalNature")}
+                            // autoFocus
+                        />
+                        <label htmlFor="legalNature">Natureza Juridica</label>
+                        </span>
+                    </LegalNature>
 
-                            <TextData
-                                data={maskDate(companyCnpj.startDate)}
-                                name="Data de Abertura"
-                                className="startDate"
-                            />
-                            <TextData
-                                data={maskFinance(companyCnpj.finance)}
-                                name="Capital Financeiro"
-                                className="finance"
-                            />
-                            </ViewData>
-                        </TabPanel>
+                    {/* finance */}
+                    <Finance className="field col">
+                        <span className="p-float-label">
+                        <InputNumber
+                            id="finance"
+                            // value={company.finance}
+                            onValueChange={(e) => onInputNumberChange(e, "finance")}
+                            mode="currency"
+                            currency="BRL"
+                            locale="pt-RS"
+                        />
+                        <label htmlFor="finance">Capital Financeiro</label>
+                        </span>
+                    </Finance>
+                    </Company>
 
-                        <TabPanel header="Endereço">
-                            <Address>
-                                <TextData data={maskCep(companyAddress.cep)} 
-                                    name="Cep" 
-                                    className="cep" 
+                    <Address>
+                    <legend>Endereço</legend>
+                    {/* cep */}
+
+                    <Cep className="field">
+                        <span className="p-float-label">
+                        <InputMask
+                            id="companyName"
+                            mask="99999-999"
+                            unmask={true}
+                            value={company.address.cep}
+                            onChange={(e) => onInputAddressChange(e, "cep")}
+                        />
+                        <label htmlFor="cep">Cep</label>
+                        </span>
+                    </Cep>
+
+                    {/* street */}
+                    <Street className="field">
+                        <span className="p-float-label">
+                        <InputText
+                            id="street"
+                            value={company.address.street}
+                            onChange={(e) => onInputAddressChange(e, "street")}
+                        />
+
+                        <label htmlFor="street">Rua</label>
+                        </span>
+                    </Street>
+
+                    <Number className="field col">
+                        <span className="p-float-label">
+                        <InputNumber
+                            id="number"
+                            onValueChange={(e) => onInputAddressChange(e, "number")}
+                        />
+                        <label htmlFor="number">Numero</label>
+                        </span>
+                    </Number>
+
+                    {/* district */}
+                    <District className="field">
+                        <span className="p-float-label">
+                        <InputText
+                            id="district"
+                            value={company.address.district}
+                            onChange={(e) => onInputAddressChange(e, "district")}
+                        />
+                        <label htmlFor="district">Bairro</label>
+                        </span>
+                    </District>
+
+                    <City className="field">
+                        <span className="p-float-label">
+                        <InputText
+                            id="city"
+                            value={company.address.city}
+                            onChange={(e) => onInputAddressChange(e, "city")}
+                        />
+                        <label htmlFor="city">Cidade</label>
+                        </span>
+                    </City>
+
+                    {/* contact */}
+                    <Contact className="field">
+                        <span className="p-float-label">
+                        <InputMask
+                            id="contact"
+                            mask="(99)99999-9999"
+                            unmask={true}
+                            value={company.address.contact}
+                            onChange={(e) => onInputAddressChange(e, "contact")}
+                        />
+                        <label htmlFor="contact">Numero para Contato</label>
+                        </span>
+                    </Contact>
+                    </Address>
+                </Dialog>
+
+                {/* info dialog */}
+                <Dialog 
+                    visible={searchPeopleInCompanyDialog} 
+                    onHide={hideSearchPeopleInCompany}
+                    style={{ width: '32rem' }} 
+                    header="Informações da Empresa"
+                    breakpoints={{ '960px': '75vw', '641px': '100vw' }}>
+
+                        <TabView>
+                            <TabPanel header="Empresa">
+                            <ViewData>
+                                <TextData
+                                    data={companyCnpj.companyName}
+                                    name="Nome da empresa"
+                                    className="companyName"
                                 />
                                 <TextData
-                                    data={companyAddress.street}
-                                    name="Rua"
-                                    className="street"
+                                    data={companyCnpj.fantasyName}
+                                    name="Nome Fantasia"
+                                    className="fantasyName"
                                 />
                                 <TextData
-                                    data={companyAddress.number}
-                                    name="Numero"
-                                    className="number"
-                                />
-                                <TextData
-                                    data={companyAddress.district}
-                                    name="Bairro"
-                                    className="district"
+                                    data={companyCnpj.status}
+                                    name="Status"
+                                    className="status"
                                 />
 
                                 <TextData
-                                    data={companyAddress.city}
-                                    name="Cidade"
-                                    className="city"
+                                    data={maskCnpj(companyCnpj.cnpj)}
+                                    name="CNPJ"
+                                    className="cnpj"
+                                />
+
+                                <TextData 
+                                    data={maskCnae(companyCnpj.cnae)} 
+                                    name="CNAE" 
+                                    className="cnae"
                                 />
 
                                 <TextData
-                                    data={maskContact(companyAddress.contact)}
-                                    name="Contato"
-                                    className="contact"
+                                    data={companyCnpj.legalNature}
+                                    name="Natureza Legal"
+                                    className="legalNature"
                                 />
-                            </Address> 
-                        </TabPanel>
 
-                        <TabPanel header="Funcionarios">
-                            <PersonContainer>
-                                {peopleList.map((people) => 
-                                    <Person>
-                                    <Avatar icon="pi pi-user" shape="circle" />
-                                    <div>
-                                        <PersonData>
-                                        <li>{people.name}</li>
-                                        <li>Cpf: {maskCpf(people.cpf)}</li>
-                                        </PersonData>
-                                    </div>
-                                    </Person>
-                                )}
-                            </PersonContainer>
-                        </TabPanel>
-                    
-                    </TabView>          
-            </Dialog>
+                                <TextData
+                                    data={maskDate(companyCnpj.startDate)}
+                                    name="Data de Abertura"
+                                    className="startDate"
+                                />
+                                <TextData
+                                    data={maskFinance(companyCnpj.finance)}
+                                    name="Capital Financeiro"
+                                    className="finance"
+                                />
+                                </ViewData>
+                            </TabPanel>
 
-            {/* <Dialog visible={deleteProductsDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Confirm" modal footer={deleteProductsDialogFooter} onHide={hideDeleteProductsDialog}>
-                <div className="confirmation-content">
-                    <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
-                    {product && <span>Are you sure you want to delete the selected products?</span>}
-                </div>
-            </Dialog> */}
-        </div>
+                            <TabPanel header="Endereço">
+                                <AddressView>
+                                    <TextData data={maskCep(companyAddress.cep)} 
+                                        name="Cep" 
+                                        className="cep" 
+                                    />
+                                    <TextData
+                                        data={companyAddress.street}
+                                        name="Rua"
+                                        className="street"
+                                    />
+                                    <TextData
+                                        data={companyAddress.number}
+                                        name="Numero"
+                                        className="number"
+                                    />
+                                    <TextData
+                                        data={companyAddress.district}
+                                        name="Bairro"
+                                        className="district"
+                                    />
+
+                                    <TextData
+                                        data={companyAddress.city}
+                                        name="Cidade"
+                                        className="city"
+                                    />
+
+                                    <TextData
+                                        data={maskContact(companyAddress.contact)}
+                                        name="Contato"
+                                        className="contact"
+                                    />
+                                </AddressView> 
+                            </TabPanel>
+
+                            {peopleList.length === 0 ? (
+                                <TabPanel header="Funcionarios">
+                                    <p>Essa empresa ainda não possui funcionarios!</p>
+                                </TabPanel>
+                            ) : (
+                                <TabPanel header="Funcionarios">
+                                    <PersonContainer>
+                                        {peopleList.map((people) => 
+                                            <Person>
+                                            <div>
+                                                <PersonData>
+                                                <li>- {people.name}</li>
+                                                <li>Cpf: {maskCpf(people.cpf)}</li>
+                                                </PersonData>
+                                            </div>
+                                            </Person>
+                                        )}
+                                    </PersonContainer>
+                                </TabPanel>
+                                )}        
+                        </TabView>          
+                </Dialog>
+
+                <Dialog
+                    visible={editCompanyDialog} 
+                    style={{ width: "40rem" }}
+                    breakpoints={{ "960px": "75vw", "641px": "90vw" }}
+                    header="Edição da empresa" 
+                    modal 
+                    className="p-fluid"
+                    footer={editCompanyDialogFooter} 
+                    onHide={hideEditCompanyDialog}>
+
+                    <Company>
+                        {/* companyName */}
+                        <CompanyName className="companyName">
+                            <span className="p-float-label">
+                            <InputText
+                                id="companyName"
+                                value={company.companyName}
+                                onChange={(e) => onInputChange(e, "companyName")}
+                                autoFocus
+                            />
+                            <label htmlFor="companyName">Nome da Empresa</label>
+                            </span>
+                        </CompanyName>
+
+                        {/* fantasyName */}
+                        <CompanyName className="fantasyName">
+                            <span className="p-float-label">
+                            <InputText
+                                id="fantasyName"
+                                value={company.fantasyName}
+                                onChange={(e) => onInputChange(e, "fantasyName")}
+                            />
+                            <label htmlFor="fantasyName">Nome Fantasia</label>
+                            </span>
+                        </CompanyName>
+
+                        {/* startDate */}
+                        <StartDate className="startDate">
+                            <span className="p-float-label">
+                            <Calendar
+                                id="startDate"
+                                onChange={(e) => onInputChange(e, "startDate")}
+                                value={company.startDate}
+                                dateFormat="dd/mm/yy"
+                                showIcon
+                            />
+                            <label htmlFor="startDate">Fundação</label>
+                            </span>
+                        </StartDate>
+
+                        {/* cnae */}
+                        <Cnae className="field">
+                            <span className="p-float-label">
+                            <InputMask
+                                id="cnae"
+                                mask="9999-9/99"
+                                unmask={true}
+                                onChange={(e) => onInputChange(e, "cnae")}
+                                // value={company.cnae}
+                                required
+                                className={classNames({
+                                "p-invalid":
+                                    submitted &&
+                                    !company.cnae &&
+                                    (submitted && company.cnae.length) < 7,
+                                })}
+                            />
+                            <label htmlFor="cnae">Cnae</label>
+                            </span>
+                            {submitted && !company.cnae && (
+                            <small className="p-error">CNAE é obrigatório.</small>
+                            )}
+                            {submitted && company.cnae.length < 7 && (
+                            <small className="p-error">Minimo de 7 caracteres.</small>
+                            )}
+                        </Cnae>
+
+                        {/* legalNature */}
+                        <LegalNature className="field">
+                            <span className="p-float-label">
+                            <InputText
+                                id="legalNature"
+                                value={company.legalNature}
+                                onChange={(e) => onInputChange(e, "legalNature")}
+                                // autoFocus
+                            />
+                            <label htmlFor="legalNature">Natureza Juridica</label>
+                            </span>
+                        </LegalNature>
+
+                        {/* finance */}
+                        <Finance className="field col">
+                            <span className="p-float-label">
+                            <InputNumber
+                                id="finance"
+                                // value={company.finance}
+                                onValueChange={(e) => onInputNumberChange(e, "finance")}
+                                mode="currency"
+                                currency="BRL"
+                                locale="pt-RS"
+                            />
+                            <label htmlFor="finance">Capital Financeiro</label>
+                            </span>
+                        </Finance>
+                    </Company>
+
+                    <Address>
+                        <legend>Endereço</legend>
+                        {/* cep */}
+
+                        <Cep className="field">
+                            <span className="p-float-label">
+                            <InputMask
+                                id="companyName"
+                                mask="99999-999"
+                                unmask={true}
+                                value={company.address.cep}
+                                onChange={(e) => onInputAddressChange(e, "cep")}
+                            />
+                            <label htmlFor="cep">Cep</label>
+                            </span>
+                        </Cep>
+
+                        {/* street */}
+                        <Street className="field">
+                            <span className="p-float-label">
+                            <InputText
+                                id="street"
+                                value={company.address.street}
+                                onChange={(e) => onInputAddressChange(e, "street")}
+                            />
+
+                            <label htmlFor="street">Rua</label>
+                            </span>
+                        </Street>
+
+                        <Number className="field col">
+                            <span className="p-float-label">
+                            <InputNumber
+                                id="number"
+                                onValueChange={(e) => onInputAddressChange(e, "number")}
+                            />
+                            <label htmlFor="number">Numero</label>
+                            </span>
+                        </Number>
+
+                        {/* district */}
+                        <District className="field">
+                            <span className="p-float-label">
+                            <InputText
+                                id="district"
+                                value={company.address.district}
+                                onChange={(e) => onInputAddressChange(e, "district")}
+                            />
+                            <label htmlFor="district">Bairro</label>
+                            </span>
+                        </District>
+
+                        <City className="field">
+                            <span className="p-float-label">
+                            <InputText
+                                id="city"
+                                value={company.address.city}
+                                onChange={(e) => onInputAddressChange(e, "city")}
+                            />
+                            <label htmlFor="city">Cidade</label>
+                            </span>
+                        </City>
+
+                        {/* contact */}
+                        <Contact className="field">
+                            <span className="p-float-label">
+                            <InputMask
+                                id="contact"
+                                mask="(99)99999-9999"
+                                unmask={true}
+                                value={company.address.contact}
+                                onChange={(e) => onInputAddressChange(e, "contact")}
+                            />
+                            <label htmlFor="contact">Numero para Contato</label>
+                            </span>
+                        </Contact>
+                    </Address>
+
+                </Dialog>
+
+                {/* delete dialog */}
+                <Dialog 
+                    visible={deleteCompanyDialog} 
+                    style={{ width: '32rem' }} 
+                    breakpoints={{ '960px': '75vw', '641px': '90vw' }} 
+                    header="Confirmação de exclusão" 
+                    modal 
+                    footer={deleteCompanyDialogFooter} 
+                    onHide={hideDeleteCompanyDialog}>
+
+                    <div className="confirmation-content">
+                        {company && (
+                            <span>
+                                 <p>Tem certeza que deseja excluir a Empresa "{company.companyName}"? </p>
+                                <p>Essa ação não da pra ser desfeita. </p>
+                            </span>
+                        )}
+                    </div>
+                </Dialog>
+            </div>
+        </React.Fragment>
     );
 }
          

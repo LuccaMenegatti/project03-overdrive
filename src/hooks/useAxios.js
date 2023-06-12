@@ -8,7 +8,7 @@ export const useAxios = () => {
     const [companyAddress, setCompanyAddress] = useState([]);
 
     //get
-    const GetCompany = async (url) => {
+    const GetAxios = async (url) => {
         await axios.get(url).then((res) => {
             setData(res.data);
         });
@@ -48,9 +48,29 @@ export const useAxios = () => {
             },
         });
     };
+
+    //post
+    const CreatePeople = (url, people) => {
+        axios.post(url, people, {
+            headers: {
+                accept: "text/plain",
+                "Content-Type": "application/json",
+            },
+        });
+    };
+
+    //put
+    const PutCompany = (url, company) => {
+        axios.put(url, company, {
+            headers: {
+                accept: "text/plain",
+                "Content-Type": "application/json",
+            },
+        });
+    };
     
     //delete
-    const DeleteCompany = async (url, id) => {
+    const DeleteAxios = async (url, id) => {
         await axios.delete(`${url}/${id}`);
     };
 
@@ -59,9 +79,11 @@ export const useAxios = () => {
         peopleList, 
         companyCnpj, 
         companyAddress,
-        GetCompany, 
+        GetAxios, 
         CreateCompany,
-        DeleteCompany, 
+        CreatePeople,
+        PutCompany,
+        DeleteAxios, 
         SearchPeopleInCompany,
         SearchCnpj
     };
