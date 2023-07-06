@@ -1,9 +1,12 @@
 import TableLayout from "./components/Table/DataTable";
+import { CompanyContextProvider } from "./context/CompanyContext";
 
 const Company = () => {
     return (
         <section>
-            <TableLayout />
+            <CompanyContextProvider>
+                <TableLayout />
+            </CompanyContextProvider>
         </section>
     );
 };

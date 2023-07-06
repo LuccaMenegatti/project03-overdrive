@@ -1,7 +1,21 @@
 import axiosConfig from 'axios';
 
-const axios = axiosConfig.create({
-    baseURL: "https://localhost:7166/api/"
+const companyAxios = axiosConfig.create({
+    baseURL: "https://localhost:7166/api/Company"
 });
 
-export default axios;
+const addressAxios = axiosConfig.create({
+    baseURL: "https://viacep.com.br/ws/",
+    // timeout: 1000,
+});
+  
+const peopleAxios = axiosConfig.create({
+    baseURL: "https://localhost:7166/api/People",
+    headers: {
+        Accept: "text/plain",
+        "Content-Type": "application/json",
+    },
+    // timeout: 1000,
+});
+
+export {companyAxios, addressAxios, peopleAxios};

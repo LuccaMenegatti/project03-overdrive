@@ -4,15 +4,29 @@ import Logo from '../../img/logo.png';
 import { Link } from 'react-router-dom';
 
 //css
-import {Cabecalho, LogoOverdrive} from'./Style';
+import {Cabecalho, Title, LogoOverdrive, Ul, Li } from'./Style';
 
 const Navbar = () => {
   return (
     <Cabecalho >
 
-          <Link to="/people">People</Link>
+          <Title>
+            <Link to="/">
+              <LogoOverdrive class="logo" src={Logo} alt="Logo Overdrive" />
+            </Link>
+          </Title>
 
-          <Link to="/company">Companies</Link>
+          <Ul>
+
+            <Li>
+              <Link to="/people">Pessoas</Link>
+            </Li>
+
+            <Li>
+              <Link to="/company">Empresas</Link>
+            </Li>
+
+          </Ul>
 
     </Cabecalho>
   );
