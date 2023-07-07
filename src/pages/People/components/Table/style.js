@@ -39,21 +39,15 @@ export const StatusChange = styled(Dialog, {
     headerStyle: {
       active: {
         "&.p-dialog .p-dialog-header": {
-          background: "$green500",
-          color: "$white",
         },
         "&.p-dialog .p-dialog-header .p-dialog-header-icon": {
-          color: "$white",
         },
       },
 
       inactive: {
         "&.p-dialog .p-dialog-header": {
-          background: "$red500",
-          color: "$white",
         },
         "&.p-dialog .p-dialog-header .p-dialog-header-icon": {
-          color: "$white",
         },
       },
     },

@@ -14,6 +14,7 @@ import { PeopleContext } from "../../context/PeopleContext";
 import {
   TableContainer,
   ActionTemplate,
+  StatusChange,
   HeaderContainer,
   InputContainer,
   People,
@@ -38,6 +39,9 @@ export default function TableLayoutPeople() {
         cpfBodyTemplate,
         contactBodyTemplate,
         statusBodyTemplate,
+        companyStatusBodyTemplate,
+        nameBodyTemplate,
+        userNameBodyTemplate,
     } = useMask();
   
     const {onInputChangePeople} = useInputChangePeople();
@@ -51,6 +55,7 @@ export default function TableLayoutPeople() {
     const [updatePeopleDialog, setUpdatePeopleDialog] = useState(false);
     const [companyListDialog, setCompanyListDialog] = useState(false);
     const [deletePeopleDialog, setDeletePeopleDialog] = useState(false);
+    const [statusPeopleDialog, setStatusPeopleDialog] = useState(false);
     const [err, setErr] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState(null);
@@ -105,13 +110,13 @@ export default function TableLayoutPeople() {
           })
           .catch((err) => {
             console.log(err.response.data);
-            notification("error", "Erro", err.response.data.split(":")[1]);
+            notification("error", "Erro", "Verifique se o Cpf ou o Telefone pertencem a outra pessoa");
           })
           .finally(() => {
             setPeople(emptyPeople);
           });
       } else {
-        notification("error", "Erro", "Não foi possivel criar a empresa");
+        notification("error", "Erro", "Não foi possivel criar a pessoa");
       }
     };
 
@@ -128,7 +133,7 @@ export default function TableLayoutPeople() {
       console.log(_people);
 
       const updateTable = () => {
-        const index = peoples.findIndex((p) => p.id == people.id);
+        const index = peoples.findIndex((p) => p.id === people.id);
         peopleAxios.get(`SearchPeopleByCpf/${cpf}`).then((res) => {
           _peoples[index] = { ...res.data };
           console.log(res.data);
@@ -139,7 +144,7 @@ export default function TableLayoutPeople() {
       Object.keys(_people).forEach((peopleItem) => {
         console.log(peopleItem);
   
-        if (_people[peopleItem] == "") {
+        if (_people[peopleItem] === "") {
           _people[peopleItem] = null;
         }
   
@@ -160,7 +165,7 @@ export default function TableLayoutPeople() {
           })
           .catch((err) => {
             console.log(err.response.data);
-            notification("error", "Erro", err.response.data.split(":")[1]);
+            notification("error", "Erro", "Preencha todos os campos para editar");
           })
           .finally(() => {
             setPeople(emptyPeople);
@@ -188,6 +193,60 @@ export default function TableLayoutPeople() {
         });
   
       setDeletePeopleDialog(false);
+    };
+
+    const toggleStatus = () => {
+      const updateStatus = () => {
+        const index = peoples.findIndex((c) => c.id === people.id);
+        let _people = { ...people };
+        if (_people.status === "Active") {
+          _people.status = "Inactive";
+        } else {
+          _people.status = "Active";
+        }
+        peoples[index] = _people;
+        console.log(peoples);
+      };
+  
+      const updatePeople = () => {
+        const index = peoples.findIndex((c) => c.id === people.id);
+        let _peoples = [...peoples];
+        let _people = { ...people };
+        if (_people.status === "Active") {
+          _people.status = "Inactive";
+        } else {
+          _people.status = "Active";
+        }
+        _people.idCompany = null;
+        _people.company = null;
+  
+        _peoples[index] = _people;
+        setPeoples(_peoples);
+      };
+  
+      peopleAxios
+        .put(`ChangeStatus/${people.id}`)
+        .then((res) => {
+          updateStatus();
+          notification("success", "Concluido", "Status Alterado");
+        })
+        .then(() => {
+          if (people.idCompany !== null) {
+            notification(
+              "info",
+              "Atençao",
+              "Essa pessoa foi retirada da empresa"
+            );
+            updatePeople();
+          }
+        })
+        .catch((err) => {
+          notification("error", "Erro", "Status não pode ser alterado");
+        })
+        .finally(() => {
+          setPeople(emptyPeople);
+        });
+      setStatusPeopleDialog(false);
     };
 
     //open Dialog's
@@ -222,6 +281,11 @@ export default function TableLayoutPeople() {
         .catch()
         .finally();
     };
+
+    const openStatusChangePeople = (people) => {
+      setPeople(people);
+      setStatusPeopleDialog(true);
+    };
   
     //hide Dialog's
     const hideDialogCreatePeople = () => {
@@ -241,6 +305,10 @@ export default function TableLayoutPeople() {
 
     const hideViewPeopleComplete = () => {
       setCompanyListDialog(false);
+    };
+
+    const hideStatusPeopleDialog = () => {
+      setStatusPeopleDialog(false);
     };
 
     //footer
@@ -296,42 +364,75 @@ export default function TableLayoutPeople() {
         />
       </React.Fragment>
     );
+
+    const statusChangeDialogFooter = (
+      <React.Fragment>
+        <Button
+          label="Cancelar"
+          icon="pi pi-times"
+          outlined
+          onClick={hideStatusPeopleDialog}
+          autoFocus
+        />
+        {people.status === "Active" ? (
+          <Button
+            label="Desativar"
+            icon="pi pi-check"
+            // severity="success"
+            severity="danger"
+            onClick={toggleStatus}
+          />
+        ) : (
+          <Button
+            label="Ativar"
+            icon="pi pi-check"
+            // severity="success"
+            severity="success"
+            onClick={toggleStatus}
+          />
+        )}
+      </React.Fragment>
+    );
   
   
     const actionBodyTemplate = (rowData) => {
         const statusSeverity = (data) => {
-          if (data.status == "Active") {
+          if (data.status === "Active") {
             return "danger";
           }
-          if (data.status == "Pending") {
+          if (data.status === "Pending") {
             return "secondary";
           }
           return "success";
         };
     
         const statusIcon = (data) => {
-          if (data.status == "Active") {
-            return "thumbs-down";
+          if (data.status === "Active") {
+            return "ban";
           }
-          return "thumbs-up";
+          return "check-circle";
         };
     
         const statusDisabled = (data) => {
-          if (data.status == "Pending") {
-            return true;
-          }
-          return false;
+          if (data.idCompany !== null){
+            return true
+          } else{
+            if (data.status === "Pending") {
+              return true;
+            }
+            return false;
+          } 
         };
     
         const statusTooltip = (data) => {
-          if (data.status == "Active") {
-            return "Desativa Pessoa";
+          if (data.status === "Active") {
+            return "Desativar Pessoa";
           }
-          if (data.status == "pending") {
-            return "pendente";
+          if (data.status === "pending") {
+            return "Pessoa Pendente";
           }
     
-          return "Ativa Pessoa";
+          return "Ativar Pessoa";
         };
     
         const configTooltip = {
@@ -341,21 +442,24 @@ export default function TableLayoutPeople() {
     
         return (
           <ActionTemplate>
-            {/* <Button
+            <Button
               rounded
               icon={`pi pi-${statusIcon(rowData)}`}
               disabled={statusDisabled(rowData)}
               severity={statusSeverity(rowData)}
+              className="mr-2"
               outlined
-              //onClick={() => openStatusChangeCompany(rowData)}
+              onClick={() => openStatusChangePeople(rowData)}
               tooltip={statusTooltip(rowData)}
               tooltipOptions={configTooltip}
-            /> */}
+            />
     
             <Button
               icon="pi pi-building"
               rounded
               outlined
+              className="mr-2"
+              disabled={rowData.status === "Inactive"}
               onClick={() => dialogCompanyList(rowData)}
               tooltip="View"
               tooltipOptions={configTooltip}
@@ -367,6 +471,7 @@ export default function TableLayoutPeople() {
               outlined
               className="mr-2"
               severity="warning"
+              disabled={rowData.status === "Inactive"}
               onClick={() => dialogSaveUpdatePeople(rowData)}
               tooltip="Editar"
               tooltipOptions={configTooltip}
@@ -375,8 +480,10 @@ export default function TableLayoutPeople() {
               icon="pi pi-trash"
               rounded
               outlined
+              className="mr-2"
               severity="danger"
               onClick={() => dialogDeletePeople(rowData)}
+              disabled={rowData.idCompany !== null}
               tooltip="Deletar"
               tooltipOptions={configTooltip}
             />
@@ -418,7 +525,8 @@ export default function TableLayoutPeople() {
                 loading={loading}
                 emptyMessage="A tabela ainda não possui dados"
                 dataKey="id"
-                removableSort
+                sortField="id"
+                sortOrder={-1}
                 selectionMode="single"
                 paginator
                 scrollable
@@ -431,11 +539,11 @@ export default function TableLayoutPeople() {
                 header={header}             
               >
                     <Column field="id" header="Id" sortable style={{ minWidth: '5rem' }}></Column>
-                    <Column field="name" header="Nome" style={{ minWidth: '10rem' }}></Column>
-                    <Column field="userName" header="Nome de Usuario" style={{ minWidth: '12rem' }}></Column>
+                    <Column field="name" header="Nome" body={nameBodyTemplate} style={{ minWidth: '10rem' }}></Column>
+                    <Column field="userName" header="Nome de Usuario" body={userNameBodyTemplate} style={{ minWidth: '12rem' }}></Column>
                     <Column field="cpf" header="Cpf" body={cpfBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="numberContact" header="Contato" body={contactBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
-                    <Column field="company.companyName" header="Empresa" sortable style={{ minWidth: '10rem' }}></Column>
+                    <Column body={companyStatusBodyTemplate} field="company.companyName" header="Empresa" sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="status" header="Status" body={statusBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
                     <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: "9rem" }}></Column>
 
@@ -463,6 +571,7 @@ export default function TableLayoutPeople() {
                     value={people.name || ""}
                     onChange={(e) => onInputChangePeople(e, "name")}
                     autoFocus
+                    maxLength={50}
                     className={classNames({
                       "p-invalid": submitted && !people.name,
                     })}
@@ -488,6 +597,7 @@ export default function TableLayoutPeople() {
                   <InputText
                     id="userName"
                     value={people.userName || ""}
+                    maxLength={20}
                     onChange={(e) => onInputChangePeople(e, "userName")}
                   />
                   <label htmlFor="userName">Nome de Usuario</label>
@@ -582,6 +692,7 @@ export default function TableLayoutPeople() {
                   <InputText
                     id="name"
                     value={people.name}
+                    maxLength={50}
                     onChange={(e) => onInputChangePeople(e, "name")}
                     autoFocus
                     className={classNames({
@@ -609,6 +720,7 @@ export default function TableLayoutPeople() {
                   <InputText
                     id="userName"
                     value={people.userName}
+                    maxLength={20}
                     onChange={(e) => onInputChangePeople(e, "userName")}
                   />
                   <label htmlFor="userName">Nome de Usuario</label>
@@ -671,7 +783,7 @@ export default function TableLayoutPeople() {
           {/* people complete */}
           <Dialog
             visible={companyListDialog}
-            style={{ width: "50rem" }}
+            style={{ width: "55rem" }}
             breakpoints={{ "960px": "75vw", "641px": "90vw" }}
             header={`Informações sobre "${people.name}"`}
             modal
@@ -681,6 +793,29 @@ export default function TableLayoutPeople() {
             {people.companyc}
             <CompanyList value={companies} peopleValue={people} />
           </Dialog>
+
+          {/* Status */}
+          <StatusChange
+            visible={statusPeopleDialog}
+            style={{ width: "32rem" }}
+            breakpoints={{ "960px": "75vw", "641px": "90vw" }}
+            header="Mudança de Status"
+            modal
+            footer={statusChangeDialogFooter}
+            onHide={hideStatusPeopleDialog}
+          >
+            <Text>
+              {people.status === "Active" ? (
+                <span>
+                  Desativar Pessoa {people.name}
+                </span>
+              ) : (
+                <span>
+                  Ativar Pessoa {people.name}
+                </span>
+              )}
+            </Text>
+          </StatusChange>
 
         </div>
     );

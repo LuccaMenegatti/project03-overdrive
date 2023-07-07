@@ -1,5 +1,6 @@
 import { styled } from "../../../../config/stitches";
 import { Calendar } from "primereact/calendar";
+import { Dialog } from "primereact/dialog";
 
 export const TableContainer = styled("div", {
   height: "84vh",
@@ -17,6 +18,26 @@ export const CalendarTemplate = styled(Calendar, {
   },
   "&.p-calendar-w-btn-right .p-datepicker-trigger:hover": {
     border: "1px solid black",
+  },
+});
+
+export const StatusChange = styled(Dialog, {
+  variants: {
+    headerStyle: {
+      active: {
+        "&.p-dialog .p-dialog-header": {
+        },
+        "&.p-dialog .p-dialog-header .p-dialog-header-icon": {
+        },
+      },
+
+      inactive: {
+        "&.p-dialog .p-dialog-header": {
+        },
+        "&.p-dialog .p-dialog-header .p-dialog-header-icon": {
+        },
+      },
+    },
   },
 });
 

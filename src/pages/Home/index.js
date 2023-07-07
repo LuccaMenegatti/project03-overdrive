@@ -6,10 +6,7 @@ import { Dialog } from 'primereact/dialog';
 import {
     HomeDiv,
     Content,
-    Info,
-    Buttons,
-    ButtonLink,
-    Lista,
+    Paragrafo,
 } from "./style";
 
 function Home() {
@@ -27,43 +24,50 @@ function Home() {
     const technologies = [
     {
         name: 'React',
-        description: 'Uma biblioteca JavaScript para criar interfaces de usuário interativas.'
+        description: 'Biblioteca JavaScript para criação de interfaces de usuário (UI) modernas e reativas.'
     },
     {
         name: 'JavaScript',
-        description: 'Uma linguagem de programação amplamente utilizada para desenvolvimento web.'
+        description: 'Linguagem de programação usada para desenvolvimento web, permite adicionar interatividade às páginas..'
     },
     {
-        name: 'HTML',
-        description: 'Linguagem de marcação que define a estrutura e o conteúdo de uma página web.'
+        name: 'Prime-React',
+        description: 'Biblioteca de componentes prontos para uso em React, oferece uma aparência moderna e responsiva.'
     },
     {
-        name: 'CSS',
-        description: 'Linguagem de estilização que define a aparência e o layout de uma página web.'
-    }
+        name: 'Stitches',
+        description: 'Biblioteca CSS-in-JS que simplifica a estilização de componentes React usando JavaScript.'
+    },
+    {
+        name: 'Axios',
+        description: ' Biblioteca JavaScript para fazer requisições HTTP a uma API de forma simples e flexível.'
+    },
+    {
+        name: 'API',
+        description: 'Conjunto de regras que permite a comunicação entre diferentes softwares, fornecendo métodos padronizados para enviar e receber dados.'
+    },
     ];
 
 
         return (
         <HomeDiv>
             <Content>
-                <Info>
+                <div>
                     <h1>Bem-vindo ao Projeto 3</h1>
-                    <p>O projeto foi desenvolvido com intuito de criar o front-end para consumir a API Csharp 
+                    <Paragrafo>O projeto foi desenvolvido com intuito de criar o front-end para consumir a API Csharp 
                         concluida no projeto 2, onde a API que fornece os recursos necessários para realizar 
-                        as operaçoes de cadastro, edição, pesquisa e exclusão de empresas e pessoas (CRUD).
-                    </p>
+                        as operações de cadastro, edição, pesquisa e exclusão de empresas e pessoas (CRUD).
+                    </Paragrafo>
 
-                    <p>O projeto foi uma experiência valiosa, pois me permitiu aprimorar minhas 
+                    <Paragrafo>Foi uma experiência valiosa, pois me permitiu aprimorar minhas 
                         habilidades em desenvolvimento web, trabalhar com APIs externas e aprender
-                        a lidar com dados de cadastro de pessoas e empresas de forma eficiente. 
+                        a lidar com as requisições Axios de forma eficiente. 
                         Foi gratificante criar uma solução que facilita o gerenciamento e organização 
-                        dessas informações de forma simples e acessível.
-                    </p>
+                        dessas informações e funcionalidades fornecidas pela Api.
+                    </Paragrafo>
                     
                     <Button label="Exibir Tecnologias" icon="pi pi-list" onClick={showDialog} />
-
-                </Info>
+                </div>
             </Content>
 
 

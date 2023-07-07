@@ -77,6 +77,38 @@ export const useMask = () => {
         }
     };
 
+    const maskName = (name) => {
+        if (!name) return;
+        if (name.length > 15) {
+          const nomesimplificado = name.slice(0, 15);
+          return `${nomesimplificado}...`;
+        }
+        return name;
+    };
+
+    const maskUserName = (userName) => {
+        if (!userName) return;
+        if (userName.length > 15) {
+          const nomesimplificado = userName.slice(0, 15);
+          return `${nomesimplificado}...`;
+        }
+        return userName;
+    };
+
+    const maskCompanyName = (fullName) => {
+        if (!fullName) return;
+        if (fullName.length > 15) {
+          const nomesimplificado = fullName.slice(0, 15);
+          return `${nomesimplificado}...`;
+        }
+        return fullName;
+    };
+
+    const maskEmptyData = (data) => {
+        if (data) return data;
+        return 'Sem dados';
+      };
+
     //Templates
     const cnpjBodyTemplate = (rowData) => {
         return maskCnpj(rowData.cnpj);
@@ -106,7 +138,25 @@ export const useMask = () => {
         return <Tag value={rowData.status} severity={maskStatus(rowData)}></Tag>;
     };
 
- 
+    const companyStatusBodyTemplate = (rowData) => {
+        if(rowData.idCompany !== null){
+            return rowData.company.companyName;
+        } else {
+            return '';
+        }       
+    };
+
+    const companyNameBodyTemplate = (rowData) => {
+        return maskEmptyData(maskCompanyName(rowData.companyName));
+      };
+
+    const nameBodyTemplate = (rowData) => {
+        return maskName(rowData.name);
+    };
+
+    const userNameBodyTemplate = (rowData) => {
+        return maskUserName(rowData.userName);
+    };
 
   return {
     maskCnpj,
@@ -117,6 +167,10 @@ export const useMask = () => {
     maskDate,
     maskStatus,
     maskFinance,
+    maskName,
+    maskUserName,
+    maskCompanyName,
+    maskEmptyData,
     cnpjBodyTemplate,
     cpfBodyTemplate,
     cnaeBodyTemplate,
@@ -124,5 +178,9 @@ export const useMask = () => {
     dateBodyTemplate,
     priceBodyTemplate,
     statusBodyTemplate,
+    companyStatusBodyTemplate,
+    companyNameBodyTemplate,
+    nameBodyTemplate,
+    userNameBodyTemplate,
   };
 };

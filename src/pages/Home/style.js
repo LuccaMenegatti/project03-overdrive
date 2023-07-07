@@ -24,35 +24,9 @@ export const Content = styled("div", {
     justifyContent: "space-between",
 });
 
-export const Info = styled("div", {
-    "&.h1": {
-        fontSize: "40px",
-    },
-    
-    "&.p": {
-        fontSize: '1.2rem',
-    
-    },
-});
-
-export const Buttons = styled("div", {
-    padding: "20px",
-    marginTop: "140px",
-});
-
-export const Lista = styled("ul", {
-    listStyle: "none",
-    display: "flex",
-    justifyContent: "space-between",
-});
-
-export const ButtonLink = styled("a", {
-    padding: "9px 25px",
-    border: "none",
-    bordeRadius: "50px",
-    cursor: "pointer",
-    transition: "all 0.3s ease 0s",
+export const Paragrafo = styled("p", {
+    textAlign: "justify",
+    fontSize:"1.3rem",
 });
 
 
-  

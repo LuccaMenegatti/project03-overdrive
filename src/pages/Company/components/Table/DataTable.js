@@ -33,6 +33,7 @@ import {
   ActionTemplate,
   TableContainer,
   HeaderContainer,
+  StatusChange,
   Input,
   ViewData,
   Address,
@@ -50,11 +51,14 @@ export default function TableLayout() {
         maskCpf,
         maskCep,
         maskContact,
+        maskName,
+        maskCompanyName,
         cnpjBodyTemplate,
         cnaeBodyTemplate,
         dateBodyTemplate,
         priceBodyTemplate,
         statusBodyTemplate,
+        companyNameBodyTemplate,
     } = useMask();
 
     const {
@@ -155,7 +159,7 @@ export default function TableLayout() {
             })
             .catch((err) => {
               console.log(err.response.data);
-              notification("error", "Erro", err.response.data.split(":")[1]);
+              notification("error", "Erro", "Esse Cnpj Já Existe!");
             })
             .finally(() => {
               setCompany(emptyCompany);
@@ -205,6 +209,8 @@ export default function TableLayout() {
         });
     
         if (
+          _company.fantasyName !== null &&
+          _company.legalNature !== null &&
           _company.startDate !== null &&
           _company.cnae?.length === 7 &&
           _address.cep?.length === 8 &&
@@ -219,7 +225,7 @@ export default function TableLayout() {
             })
             .catch((err) => {
               console.log(err.response.data);
-              notification("error", "Erro", err.response.data.split(":")[1]);
+              notification("error", "Erro", "Preencha todos os campos para editar");
             })
             .finally(() => {
               setCompany(emptyCompany);
@@ -249,6 +255,58 @@ export default function TableLayout() {
         setDeleteCompanyDialog(false);
     };
     
+    const toggleStatus = () => {
+      const updateStatus = () => {
+        const index = companies.findIndex((c) => c.id === company.id);
+        let _company = { ...company };
+        if (_company.status === "Active") {
+          _company.status = "Inactive";
+        } else {
+          _company.status = "Active";
+        }
+        companies[index] = _company;
+        console.log(companies);
+      };
+  
+      const updateCompanies = () => {
+        let _companies = [...companies];
+        let _company = { ...company };
+        if (_company.status === "Active") {
+          _company.status = "Inactive";
+        } else {
+          _company.status = "Active";
+        }
+        const index = companies.findIndex((c) => c.id === company.id);
+        _company.peoples = [];
+        _companies[index] = _company;
+        setCompanies(_companies);
+      };
+  
+      companyAxios
+        .put(`ChangeStatus/${company.id}`)
+        .then((res) => {
+          updateStatus();
+          notification("success", "Concluido", "Status Alterado");
+        })
+        .then(() => {
+          if (company.peoples?.length > 0) {
+            notification(
+              "info",
+              "Atençao",
+              "pessoa(as) foram retiradas da empresa"
+            );
+            updateCompanies();
+            console.log(company);
+          }
+        })
+        .catch((err) => {
+          notification("error", "Erro", "Status não pode ser alterado");
+        })
+        .finally(() => {
+          setCompany(emptyCompany);
+        });
+      setStatusCompanyDialog(false);
+    };
 
     const CreateCompanyDialog = () => {
         setCompany(emptyCompany);
@@ -267,7 +325,7 @@ export default function TableLayout() {
     const ConfirmDeleteCompanyDialog = (company) => {
         setCompany(company);
         setDeleteCompanyDialog(true);
-      };
+    };
 
     const CompanyCompleteDialog = (company) => {
         setCompany(company);
@@ -280,6 +338,11 @@ export default function TableLayout() {
           .finally();
     
         setCompanyCompleteDialog(true);
+    };
+
+    const openStatusChangeCompany = (company) => {
+      setCompany(company);
+      setStatusCompanyDialog(true);
     };
 
     const hideCreateCompanyDialog = () => {
@@ -299,6 +362,10 @@ export default function TableLayout() {
 
     const hideCompanyCompleteDialog = () => {
         setCompanyCompleteDialog(false);
+    };
+
+    const hideStatusCompanyDialog = () => {
+      setStatusCompanyDialog(false);
     };
 
     const createCompanyDialogFooter = (
@@ -354,6 +421,35 @@ export default function TableLayout() {
           />
         </React.Fragment>
     );
+
+    const statusChangeDialogFooter = (
+      <React.Fragment>
+        <Button
+          label="Não"
+          icon="pi pi-times"
+          outlined
+          onClick={hideStatusCompanyDialog}
+          autoFocus
+        />
+        {company.status == "Active" ? (
+          <Button
+            label="Desativar"
+            icon="pi pi-check"
+            // severity="success"
+            severity="danger"
+            onClick={toggleStatus}
+          />
+        ) : (
+          <Button
+            label="Ativar"
+            icon="pi pi-check"
+            // severity="success"
+            severity="success"
+            onClick={toggleStatus}
+          />
+        )}
+      </React.Fragment>
+    );
     
     const actionBodyTemplate = (rowData) => {
         const statusSeverity = (data) => {
@@ -368,27 +464,31 @@ export default function TableLayout() {
     
         const statusIcon = (data) => {
           if (data.status == "Active") {
-            return "thumbs-down";
+            return "ban";
           }
-          return "thumbs-up";
+          return "check-circle";
         };
     
         const statusDisabled = (data) => {
-          if (data.status == "Pending") {
+          if(data.peoples?.length > 0) {
             return true;
+          } else {
+            if (data.status === "Pending") {
+              return true;
+            }
+            return false;
           }
-          return false;
         };
     
         const statusTooltip = (data) => {
-          if (data.status == "Active") {
-            return "Desativa Empresa";
+          if (data.status === "Active") {
+            return "Desativar Empresa";
           }
-          if (data.status == "pending") {
-            return "pendente";
+          if (data.status === "pending") {
+            return "Status Pendente";
           }
     
-          return "Ativa Empresa";
+          return "Ativar Empresa";
         };
     
         const configTooltip = {
@@ -404,7 +504,8 @@ export default function TableLayout() {
               disabled={statusDisabled(rowData)}
               severity={statusSeverity(rowData)}
               outlined
-              //onClick={() => openStatusChangeCompany(rowData)}
+              className="mr-2"
+              onClick={() => openStatusChangeCompany(rowData)}
               tooltip={statusTooltip(rowData)}
               tooltipOptions={configTooltip}
             />
@@ -413,6 +514,7 @@ export default function TableLayout() {
               icon="pi pi-bars"
               rounded
               outlined
+              className="mr-2"
               onClick={() => CompanyCompleteDialog(rowData)}
               tooltip="View"
               tooltipOptions={configTooltip}
@@ -432,14 +534,20 @@ export default function TableLayout() {
               icon="pi pi-trash"
               rounded
               outlined
+              className="mr-2"
               severity="danger"
               onClick={() => ConfirmDeleteCompanyDialog(rowData)}
-              disabled={rowData.peoples?.length > 0}
               tooltip="Deletar"
+              disabled={rowData.peoples?.length > 0}
               tooltipOptions={configTooltip}
             />
           </ActionTemplate>
         );
+    };
+
+    const statusChangeHeader = (rowData) => {
+      if (rowData.status == "Active") return "inactive";
+      return "active";
     };
 
     //header
@@ -475,7 +583,8 @@ export default function TableLayout() {
                 value={companies}
                 onSelectionChange={(e) => setSelectedCompanies(e.value)}
                 dataKey="id"
-                removableSort
+                sortField="id"
+                sortOrder={-1}
                 selectionMode="single"
                 emptyMessage="A tabela ainda não possui dados"
                 scrollable
@@ -489,7 +598,7 @@ export default function TableLayout() {
                 header={header}             
               >
                     <Column field="id" header="Id" sortable style={{ minWidth: '5rem' }}></Column>
-                    <Column field="companyName" header="Nome" sortable style={{ minWidth: '10rem' }}></Column>
+                    <Column field="companyName" header="Nome" body={companyNameBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="cnpj" header="Cnpj" body={cnpjBodyTemplate} sortable style={{ minWidth: '12rem' }}></Column>
                     <Column field="cnae" header="Cnae" body={cnaeBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
                     <Column field="finance" header="Finanças" body={priceBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
@@ -522,7 +631,7 @@ export default function TableLayout() {
                         value={company.companyName}
                         onChange={(e) => onInputChange(e, "companyName")}
                         autoFocus
-                        maxLength={100}
+                        maxLength={70}
                     />
                     <label htmlFor="companyName">Nome da Empresa</label>
                     </span>
@@ -546,7 +655,7 @@ export default function TableLayout() {
                         id="fantasyName"
                         value={company.fantasyName}
                         onChange={(e) => onInputChange(e, "fantasyName")}
-                        maxLength={100}
+                        maxLength={50}
                     />
                     <label htmlFor="fantasyName">Nome Fantasia</label>
                     </span>
@@ -688,10 +797,10 @@ export default function TableLayout() {
                         id="legalNature"
                         value={company.legalNature}
                         onChange={(e) => onInputChange(e, "legalNature")}
-                        maxLength={50}
+                        maxLength={20}
                         // autoFocus
                     />
-                    <label htmlFor="legalNature">Naturesa legal</label>
+                    <label htmlFor="legalNature">Natureza legal</label>
                     </span>
                     {submitted && !company.legalNature && (
                       <Message
@@ -716,6 +825,8 @@ export default function TableLayout() {
                         mode="currency"
                         currency="BRL"
                         locale="pt-RS"
+                        min={0}
+                        max={9999999999}
                     />
                     <label htmlFor="finance">Capital Financeiro</label>
                     </span>
@@ -813,6 +924,8 @@ export default function TableLayout() {
                     <span className="p-float-label">
                     <InputNumber
                         id="number"
+                        min={0}
+                        max={999999}
                         value={company.address.number}
                         onValueChange={(e) => onInputAddressChange(e, "number")}
                     />
@@ -909,7 +1022,7 @@ export default function TableLayout() {
                 visible={updateCompanyDialog}
                 style={{ width: "40rem" }}
                 breakpoints={{ "960px": "75vw", "641px": "90vw" }}
-                header={`Edite a Empresa ${company.companyName}`}
+                header={`Edite a Empresa`}
                 modal
                 className="p-fluid"
                 footer={updateCompanyDialogFooter}
@@ -924,6 +1037,7 @@ export default function TableLayout() {
                         value={company.companyName}
                         onChange={(e) => onInputChange(e, "companyName")}
                         autoFocus
+                        maxLength={70}
                     />
                     <label htmlFor="companyName">Nome da Empresa</label>
                     </span>
@@ -946,6 +1060,8 @@ export default function TableLayout() {
                     <InputText
                         id="fantasyName"
                         value={company.fantasyName}
+                        maxLength={50}
+                        required
                         onChange={(e) => onInputChange(e, "fantasyName")}
                     />
                     <label htmlFor="fantasyName">Nome Fantasia</label>
@@ -969,6 +1085,7 @@ export default function TableLayout() {
                     <InputText
                         id="legalNature"
                         value={company.legalNature}
+                        maxLength={20}
                         onChange={(e) => onInputChange(e, "legalNature")}
                         // autoFocus
                     />
@@ -1037,6 +1154,8 @@ export default function TableLayout() {
                         mode="currency"
                         currency="BRL"
                         locale="pt-RS"
+                        min={0}
+                        max={9999999999}
                     />
                     <label htmlFor="finance">Capital Financeiro</label>
                     </span>
@@ -1143,6 +1262,8 @@ export default function TableLayout() {
                         autoClear={false}
                         onValueChange={(e) => onInputAddressChange(e, "number")}
                         required
+                        min={0}
+                        max={999999}
                         className={classNames({
                         "p-invalid": submitted && !company.address.number,
                         })}
@@ -1243,9 +1364,9 @@ export default function TableLayout() {
             {/* company complete */}
             <Dialog
                 visible={companyCompleteDialog}
-                style={{ width: "35rem" }}
+                style={{ width: "55rem" }}
                 breakpoints={{ "960px": "75vw", "641px": "90vw" }}
-                header={`Informações da empresa ${company.companyName}`}
+                header={`Informações da empresa`}
                 modal
                 className="p-fluid"
                 onHide={hideCompanyCompleteDialog}
@@ -1346,7 +1467,7 @@ export default function TableLayout() {
                              <i class="pi pi-info-circle" />
                                 <PeopleData>
                                     <label>Nome:</label>
-                                    <li key={i}>{people.name.split(" ")[0]}</li>
+                                    <li key={i}>{maskName(people.name)}</li>
                                 </PeopleData>
                                 <PeopleData>
                                     <label>Cpf: </label>
@@ -1369,15 +1490,39 @@ export default function TableLayout() {
                 visible={deleteCompanyDialog}
                 style={{ width: "32rem" }}
                 breakpoints={{ "960px": "75vw", "641px": "90vw" }}
-                header={`Deletar a empresa ${company.companyName}`}
+                header={`Deletar a empresa`}
                 modal
                 footer={deleteCompanyDialogFooter}
                 onHide={hideDeleteCompanyDialog}
             >
                 <Text>
-                <span style={{textAlign: "Justify"}}>Tem certeza que deseja deletar a empresa {company.companyName}? </span>
+                <span style={{textAlign: "Justify"}}>Tem certeza que deseja deletar a empresa {maskCompanyName(company.companyName)}? </span>
                 </Text>
             </Dialog>
+
+            {/* status */}
+            <StatusChange
+              headerStyle={statusChangeHeader(company)}
+              visible={statusCompanyDialog}
+              style={{ width: "32rem" }}
+              breakpoints={{ "960px": "75vw", "641px": "90vw" }}
+              header="Confirmar mudança de status da Empresa"
+              modal
+              footer={statusChangeDialogFooter}
+              onHide={hideStatusCompanyDialog}
+            >
+              <Text>
+                {company.status == "Active" ? (
+                  <span>
+                    Desativar Empresa {maskCompanyName(company.companyName)}
+                  </span>
+                ) : (
+                  <span>
+                    Ativar Empresa {maskCompanyName(company.companyName)}
+                  </span>
+                )}
+              </Text>
+            </StatusChange>
         </div>
     );
 }

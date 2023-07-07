@@ -40,6 +40,7 @@ const LoadingTablePeople = () => {
         <Skeleton shape="circle" size="2.4rem" className="mr-2"></Skeleton>
         <Skeleton shape="circle" size="2.4rem" className="mr-2"></Skeleton>
         <Skeleton shape="circle" size="2.4rem" className="mr-2"></Skeleton>
+        <Skeleton shape="circle" size="2.4rem" className="mr-2"></Skeleton>
       </ButtonLoading>
     );
   };
