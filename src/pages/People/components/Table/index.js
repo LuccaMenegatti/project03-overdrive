@@ -99,7 +99,7 @@ export default function TableLayoutPeople() {
         });
       };
   
-      if (_people.name && _people.cpf.length === 11) {
+      if (_people.name && _people.cpf?.length === 11) {
         console.log("test");
         peopleAxios
           .post("", _people)
@@ -534,7 +534,7 @@ export default function TableLayoutPeople() {
                 rows={10}
                 rowsPerPageOptions={[5, 10, 25]}
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} people"
+                currentPageReportTemplate="Pessoas"
                 globalFilter={globalFilter} 
                 header={header}             
               >
